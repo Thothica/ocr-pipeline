@@ -58,7 +58,11 @@ func main() {
 		routineChannel <- struct{}{}
 		wg.Add(1)
 		go func(url, title string) {
-			download_pdf(url, title)
+			err := download_pdf(url, title)
+			if err != nil {
+				bad_files.Add(1)
+				color.Red(fmt.Sprintf("Failed: %s", title))
+			}
 			<-routineChannel
 			wg.Done()
 		}(val[5], fmt.Sprintf("%v", idx+INITIAL_INDEX))
@@ -70,19 +74,15 @@ func main() {
 	color.Green("FILES DOWNLOADED: %v", len(csvData)-int(bad_files.Load()))
 }
 
-func download_pdf(url, title string) {
+func download_pdf(url, title string) error {
 	resp, err := client.Get(url)
 	if err != nil {
-		bad_files.Add(1)
-		color.Red(fmt.Sprintf("Failed: %s", title))
-		return
+		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.Header["Content-Type"][0] != "application/pdf" {
-		bad_files.Add(1)
-		color.Red(fmt.Sprintf("Failed: %s", title))
-		return
+		return err
 	}
 
 	title = strings.ReplaceAll(title, "/", "-")
@@ -90,18 +90,15 @@ func download_pdf(url, title string) {
 
 	file, err := os.Create(file_path)
 	if err != nil {
-		bad_files.Add(1)
-		color.Red(fmt.Sprintf("Failed: %s", title))
-		return
+		return err
 	}
 	defer file.Close()
 
 	_, err = io.Copy(file, resp.Body)
 	if err != nil {
-		bad_files.Add(1)
-		color.Red(fmt.Sprintf("Failed: %s", title))
-		return
+		return err
 	}
 
 	color.Green(fmt.Sprintf("Downloaded: %s", title))
+	return nil
 }
