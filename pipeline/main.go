@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gen2brain/go-fitz"
 )
@@ -28,6 +29,13 @@ var (
 
 func main() {
 	err := filepath.WalkDir(BOOKS_DIR, func(path string, d fs.DirEntry, err error) error {
+		if !strings.HasSuffix(d.Name(), ".pdf") {
+			return nil
+		}
+		err = ConvertPdf(path)
+		if err != nil {
+
+		}
 		return nil
 	})
 	if err != nil {

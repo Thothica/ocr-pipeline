@@ -61,7 +61,7 @@ func main() {
 			err := download_pdf(url, title)
 			if err != nil {
 				bad_files.Add(1)
-				color.Red(fmt.Sprintf("Failed: %s", title))
+				color.Red(fmt.Sprintf("Failed: %s", err))
 			}
 			<-routineChannel
 			wg.Done()
