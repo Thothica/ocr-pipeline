@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -19,7 +20,7 @@ const (
 	CSV_FILE      = "url.csv"
 	TARGET_DIR    = "books/"
 	INITIAL_INDEX = 469
-	MAX_ROUTINES  = 400
+	MAX_ROUTINES  = 1500
 )
 
 var (
@@ -53,14 +54,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for _, val := range csvData {
+	for idx, val := range csvData {
 		routineChannel <- struct{}{}
 		wg.Add(1)
 		go func(url, title string) {
 			download_pdf(url, title)
 			<-routineChannel
 			wg.Done()
-		}(val[5], val[1])
+		}(val[5], fmt.Sprintf("%v", idx+INITIAL_INDEX))
 	}
 
 	wg.Wait()
@@ -84,7 +85,9 @@ func download_pdf(url, title string) {
 		return
 	}
 
+	title = strings.ReplaceAll(title, "/", "-")
 	file_path := filepath.Join(TARGET_DIR, fmt.Sprintf("%s%s", title, ".pdf"))
+
 	file, err := os.Create(file_path)
 	if err != nil {
 		bad_files.Add(1)
