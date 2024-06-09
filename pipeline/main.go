@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/fatih/color"
 	"github.com/gen2brain/go-fitz"
@@ -30,6 +31,7 @@ const (
 var (
 	conversionChannel = make(chan *ImageConvert, MAX_PDF_CONVERSIONS)
 	wg                sync.WaitGroup
+	bad_files         atomic.Int64
 )
 
 func main() {
@@ -49,6 +51,7 @@ func main() {
 				text, err := client.Text()
 				if err != nil {
 					color.Red("Failed ocr: %v \n book: %s", err, ExtractedImages.title)
+					bad_files.Add(1)
 					return
 				}
 				fmt.Fprintf(&b, "%s\n\n", text)
@@ -58,6 +61,7 @@ func main() {
 			file, err := os.Create(pathToSave)
 			if err != nil {
 				color.Red("Failed to create txt file: %v \n book: %s", err, ExtractedImages.title)
+				bad_files.Add(1)
 				return
 			}
 			defer file.Close()
@@ -65,6 +69,7 @@ func main() {
 			_, err = fmt.Fprintf(file, b.String())
 			if err != nil {
 				color.Red("Failed to write txt file: %v \n book: %s", err, ExtractedImages.title)
+				bad_files.Add(1)
 			}
 		}()
 	}
@@ -79,6 +84,7 @@ func main() {
 			defer wg.Done()
 			err = ConvertPdf(path)
 			if err != nil {
+				bad_files.Add(1)
 				color.Red(fmt.Sprintf("Failed: %s", d.Name()))
 			}
 		}()
@@ -90,6 +96,7 @@ func main() {
 	}
 
 	wg.Wait()
+	color.White("Completed: \n\t Books Failed: %v", bad_files.Load())
 }
 
 func ConvertPdf(path string) error {
