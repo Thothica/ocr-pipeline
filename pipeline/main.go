@@ -42,6 +42,7 @@ func main() {
 			var b strings.Builder
 			client := gosseract.NewClient()
 			defer client.Close()
+			client.Languages = []string{"ara"}
 
 			for _, image := range ExtractedImages.images {
 				client.SetImageFromBytes(image.Bytes())
