@@ -113,7 +113,7 @@ func ConvertPdf(path string) error {
 		}
 	}
 
-	title := strings.ReplaceAll(path, "pdf", "txt")
+	title := strings.Split(strings.Split(path, ".")[0], "/")[1]
 
 	i := &ImageConvert{
 		title:  title,
