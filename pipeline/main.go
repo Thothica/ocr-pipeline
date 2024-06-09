@@ -113,8 +113,10 @@ func ConvertPdf(path string) error {
 		}
 	}
 
+	title := strings.ReplaceAll(path, "pdf", "txt")
+
 	i := &ImageConvert{
-		title:  path,
+		title:  title,
 		images: images,
 	}
 	conversionChannel <- i
