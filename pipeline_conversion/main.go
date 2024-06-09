@@ -15,14 +15,15 @@ import (
 )
 
 const (
-	BOOKS_DIR  = "books/"
-	OUTPUT_DIR = "images/"
-	// MAX_PDF_CONVERSIONS = 100
+	BOOKS_DIR           = "books/"
+	OUTPUT_DIR          = "images/"
+	MAX_PDF_CONVERSIONS = 100
 )
 
 var (
 	wg       sync.WaitGroup
 	badFiles atomic.Int64
+	ch       = make(chan struct{}, MAX_PDF_CONVERSIONS)
 )
 
 func main() {
@@ -32,13 +33,15 @@ func main() {
 		}
 
 		wg.Add(1)
+		ch <- struct{}{}
 		go func() {
-			defer wg.Done()
 			err = ConvertPdf(path)
 			if err != nil {
 				badFiles.Add(1)
 				color.Red(fmt.Sprintf("Failed: %s", d.Name()))
 			}
+			<-ch
+			wg.Done()
 		}()
 
 		return nil
