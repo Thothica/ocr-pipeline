@@ -58,8 +58,9 @@ func ConvertPdf(path string) error {
 	defer doc.Close()
 
 	title := strings.Split(strings.Split(path, ".")[0], "/")[1]
+	curDir := filepath.Join(OUTPUT_DIR, title)
 	lenPages := doc.NumPage()
-	tmpDir, err := os.MkdirTemp(OUTPUT_DIR, title)
+	err = os.MkdirAll(curDir, 0750)
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +71,7 @@ func ConvertPdf(path string) error {
 			return err
 		}
 
-		f, err := os.Create(filepath.Join(tmpDir, fmt.Sprintf("image-%03d.jpg", n)))
+		f, err := os.Create(filepath.Join(curDir, fmt.Sprintf("image-%03d.jpg", n)))
 		if err != nil {
 			panic(err)
 		}
