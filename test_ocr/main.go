@@ -3,32 +3,42 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/otiai10/gosseract/v2"
+)
+
+const (
+	IMAGES_DIR         = "images/"
+	OUTPUT_DIR         = "texts/"
+	MAX_PARALLEL_BOOKS = 100
 )
 
 func main() {
-	var bookText strings.Builder
-	client := gosseract.NewClient()
-	defer client.Close()
-	client.Languages = []string{"ara"}
-	client.SetImage("image-0100.jpg")
-	text, err := client.Text()
+	books, err := os.ReadDir(IMAGES_DIR)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Fprintf(&bookText, "%s\n\n", text)
 
-	file, err := os.Create("test.txt")
+	for _, book := range books {
+		if book.IsDir() {
+			err := extractBook(filepath.Join(IMAGES_DIR, book.Name()))
+			if err != nil {
+				color.Red(fmt.Sprintf("Failed: %s", book.Name()))
+			}
+		}
+	}
+}
+
+func extractBook(bookDir string) error {
+	_, err := os.ReadDir(bookDir)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	defer file.Close()
-	file.WriteString(bookText.String())
-	if err := file.Sync(); err != nil {
-		panic(err)
-	}
-	color.Green(fmt.Sprintf("Completed: "))
+
+	title := strings.Split(bookDir, "/")[1]
+	fmt.Println(title)
+
+	return nil
 }
