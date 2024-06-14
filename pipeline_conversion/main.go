@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"image/jpeg"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,7 +11,8 @@ import (
 	"sync/atomic"
 
 	"github.com/fatih/color"
-	"github.com/gen2brain/go-fitz"
+
+	"gopkg.in/gographics/imagick.v2/imagick"
 )
 
 const (
@@ -27,6 +28,9 @@ var (
 )
 
 func main() {
+	imagick.Initialize()
+	defer imagick.Terminate()
+
 	err := filepath.WalkDir(BOOKS_DIR, func(path string, d fs.DirEntry, err error) error {
 		if !strings.HasSuffix(d.Name(), ".pdf") {
 			return nil
@@ -53,41 +57,37 @@ func main() {
 	wg.Wait()
 	color.White("Completed: \n\t Books Failed: %v", badFiles.Load())
 }
+
 func ConvertPdf(path string) error {
-	doc, err := fitz.New(path)
-	if err != nil {
-		return err
+	mw := imagick.NewMagickWand()
+	defer mw.Destroy()
+
+	mw.ReadImage(path)
+	if err := mw.SetFormat("jpg"); err != nil {
+		log.Fatal(err)
 	}
-	defer doc.Close()
 
 	title := strings.Split(strings.Split(path, ".")[0], "/")[1]
 	curDir := filepath.Join(OUTPUT_DIR, title)
-	lenPages := doc.NumPage()
-	err = os.MkdirAll(curDir, 0750)
+	err := os.MkdirAll(curDir, 0750)
 	if err != nil {
 		panic(err)
 	}
 
-	for n := 0; n < lenPages; n++ {
-		img, err := doc.Image(n)
-		if err != nil {
+	page := 0
+
+	for {
+		if ok := mw.SetIteratorIndex(page); !ok {
+			break
+		}
+
+		if err := mw.WriteImage(filepath.Join(curDir, fmt.Sprintf("image-%04d.jpg", page))); err != nil {
 			return err
 		}
 
-		f, err := os.Create(filepath.Join(curDir, fmt.Sprintf("image-%03d.jpg", n)))
-		if err != nil {
-			panic(err)
-		}
-
-		err = jpeg.Encode(f, img, &jpeg.Options{Quality: jpeg.DefaultQuality})
-		if err != nil {
-			return err
-		}
-
-		f.Close()
+		page += 1
 	}
 
 	color.Green(fmt.Sprintf("Completed: %s", title))
-
 	return nil
 }
