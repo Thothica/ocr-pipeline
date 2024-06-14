@@ -8,13 +8,12 @@ import (
 
 func main() {
 	client := gosseract.NewClient()
-	defer client.Close()
-	client.SetLanguage("ara")
+	client.Languages = []string{"ara"}
 	client.SetImage(".png")
 	text, err := client.Text()
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(text)
+	client.Close()
 }
-
