@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -20,19 +19,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Fprintf(&bookText, "%s\n\n", text)
 
 	file, err := os.Create("test.txt")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
-
-	w := bufio.NewWriter(file)
-	w.WriteString(bookText.String())
-	if err := w.Flush(); err != nil {
+	file.WriteString(bookText.String())
+	if err := file.Sync(); err != nil {
 		panic(err)
 	}
-
 	color.Green(fmt.Sprintf("Completed: "))
-	fmt.Println(text)
 }
