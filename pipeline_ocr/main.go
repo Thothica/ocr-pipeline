@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -33,14 +32,24 @@ func main() {
 	}
 
 	for _, book := range books {
-		if book.IsDir() {
-			err := extractBook(filepath.Join(IMAGES_DIR, book.Name()))
+		if !book.IsDir() {
+			continue
+		}
+		ch <- struct{}{}
+		wg.Add(1)
+		go func() {
+			err = extractBook(filepath.Join(IMAGES_DIR, book.Name()))
 			if err != nil {
 				color.Red(fmt.Sprintf("Failed: %s", book.Name()))
 				badFiles.Add(1)
 			}
-		}
+			<-ch
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
+	color.White("Completed: \n\t Books Failed: %v", badFiles.Load())
 }
 
 func extractBook(bookDir string) error {
@@ -61,18 +70,17 @@ func extractBook(bookDir string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(&bookText, "%s\n\n", text)
+		bookText.WriteString(text)
+		bookText.WriteString("\n\n")
 	}
 
-	file, err := os.Create(filepath.Join(OUTPUT_DIR, title))
+	file, err := os.Create(filepath.Join(OUTPUT_DIR, fmt.Sprintf("%s.txt", title)))
 	if err != nil {
 		return err
 	}
-    defer file.Close()
-
-	w := bufio.NewWriter(file)
-	w.WriteString(bookText.String())
-	if err := w.Flush(); err != nil {
+	defer file.Close()
+	file.WriteString(bookText.String())
+	if err = file.Sync(); err != nil {
 		return err
 	}
 

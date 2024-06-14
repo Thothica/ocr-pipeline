@@ -18,7 +18,7 @@ import (
 const (
 	BOOKS_DIR           = "books/"
 	OUTPUT_DIR          = "images/"
-	MAX_PDF_CONVERSIONS = 100
+	MAX_PDF_CONVERSIONS = 1000
 )
 
 var (
