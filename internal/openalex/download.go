@@ -32,7 +32,7 @@ func (obj *WorkObject) SaveArticle(downloadDir string) error {
 		return err
 	}
 
-	title := fmt.Sprintf("%s.%s", strings.Split(obj.Title, "/")[3], "pdf")
+	title := fmt.Sprintf("%s.%s", strings.Split(obj.Id, "/")[3], "pdf")
 	file, err := os.Create(filepath.Join(downloadDir, title))
 	if err != nil {
 		return err

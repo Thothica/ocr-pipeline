@@ -9,6 +9,7 @@ type WorkObject struct {
 	PublicationYear uint32     `json:"publication_year"`
 	PublicationDate string     `json:"publication_date"`
 	Text            string     `json:"text"`
+	Id              string     `json:"id"`
 }
 
 type OpenAccess struct {
