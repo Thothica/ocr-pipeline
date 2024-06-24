@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/fatih/color v1.17.0
+	github.com/ledongthuc/pdf v0.0.0-20240201131950-da5b75280b06
 	github.com/otiai10/gosseract/v2 v2.4.1
 	gopkg.in/gographics/imagick.v2 v2.7.0
 )
