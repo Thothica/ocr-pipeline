@@ -2,6 +2,7 @@ package openalex
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -27,6 +28,10 @@ func (obj *WorkObject) SaveArticle(downloadDir string) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	if len(resp.Header["Content-Type"]) < 1 {
+		return errors.New("Invalid response")
+	}
 
 	if resp.Header["Content-Type"][0] != "application/pdf" {
 		return err
