@@ -53,6 +53,14 @@ func main() {
 		limitChannel <- struct{}{}
 		wg.Add(1)
 		go func(oj openalex.WorkObject) {
+
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Println("Recovered in f", r)
+					bad_files.Add(1)
+				}
+			}()
+
 			err := oj.ExtractTextFromPdf(PDF_DIR, writeObjChannel)
 			if err != nil {
 				bad_files.Add(1)
