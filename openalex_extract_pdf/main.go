@@ -63,11 +63,10 @@ func main() {
 		}(obj)
 	}
 	close(limitChannel)
-	close(writeObjChannel)
 
 	wg.Add(1)
 	go func() {
-		file, err := os.Create(OPENALEX_BEST_WORKS)
+		file, err := os.Create(OPENALEX_NEW)
 		if err != nil {
 			panic(err)
 		}
@@ -87,6 +86,7 @@ func main() {
 		wg.Done()
 	}()
 
+	close(writeObjChannel)
 	wg.Wait()
 	color.White("All done !!")
 	color.Red("FILES LOST: %v", bad_files.Load())
